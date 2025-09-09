@@ -82,7 +82,7 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     data = compute_lists()
     now_txt = data["now"].strftime("%d.%m.%Y %H:%M")
     
-    msg = f"Привет! Сейчас: {now_txt}\n\n"
+    msg = f"хаю хай. сейчас: {now_txt}\n свага на месте👉😎👈 \n"
     
     # Сегодня
     msg += f"📅 Сегодня ({DAY_NAMES[data['today_idx']]}):\n"
@@ -121,5 +121,6 @@ def main():
 
 if __name__ == "__main__":
     main()
+
 
 
