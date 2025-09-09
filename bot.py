@@ -4,7 +4,7 @@ from telegram import Update
 from telegram.ext import Updater, CommandHandler, CallbackContext
 
 # ---------- Настройки ----------
-TOKEN = "ТВОЙ_ТОКЕН_БОТА"  # вставь сюда токен своего бота
+TOKEN = "8366890929:AAHbEqoLqyQr1U8BEua7MPf6j1IquvvpGBg"  # вставь сюда токен своего бота
 END_OF_DAY = time(15, 0)
 
 schedule_raw = {
@@ -100,4 +100,5 @@ def main():
     updater.idle()
 
 if __name__ == "__main__":
+
     main()
