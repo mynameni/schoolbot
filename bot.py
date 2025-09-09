@@ -4,7 +4,7 @@ from datetime import datetime, time
 
 # ---------- Настройки ----------
 TOKEN = "8366890929:AAHbEqoLqyQr1U8BEua7MPf6j1IquvvpGBg"  # вставь сюда токен своего бота
-END_OF_DAY = time(15, 0)
+END_OF_DAY = time(12, 0)
 
 schedule_raw = {
     0: ["Разговоры о важном", "химия/алгебра/история", "иностранный язык", "биология",
@@ -121,4 +121,5 @@ def main():
 
 if __name__ == "__main__":
     main()
+
 
