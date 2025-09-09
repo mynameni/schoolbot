@@ -1,7 +1,6 @@
-import os
-from datetime import datetime, time
 from telegram import Update
-from telegram.ext import Updater, CommandHandler, CallbackContext
+from telegram.ext import ApplicationBuilder, CommandHandler, ContextTypes
+from datetime import datetime, time
 
 # ---------- Настройки ----------
 TOKEN = "8366890929:AAHbEqoLqyQr1U8BEua7MPf6j1IquvvpGBg"  # вставь сюда токен своего бота
@@ -79,7 +78,7 @@ def compute_lists():
     }
 
 # ---------- Функции бота ----------
-def start(update: Update, context: CallbackContext):
+async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     data = compute_lists()
     now_txt = data["now"].strftime("%d.%m.%Y %H:%M")
     msg = f"Привет! Сейчас: {now_txt}\n\n"
@@ -91,14 +90,13 @@ def start(update: Update, context: CallbackContext):
         msg += f"{i}. {lesson}\n"
     msg += "\n📤 Вынуть: " + (", ".join(data["to_remove"]) or "Ничего")
     msg += "\n📥 Положить: " + (", ".join(data["to_add"]) or "Ничего")
-    update.message.reply_text(msg)
+    await update.message.reply_text(msg)
 
+# ---------- Основная функция ----------
 def main():
-    updater = Updater(TOKEN)
-    updater.dispatcher.add_handler(CommandHandler("start", start))
-    updater.start_polling()
-    updater.idle()
+    app = ApplicationBuilder().token(TOKEN).build()
+    app.add_handler(CommandHandler("start", start))
+    app.run_polling()
 
 if __name__ == "__main__":
-
     main()
