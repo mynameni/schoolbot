@@ -81,16 +81,37 @@ def compute_lists():
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     data = compute_lists()
     now_txt = data["now"].strftime("%d.%m.%Y %H:%M")
+    
     msg = f"Привет! Сейчас: {now_txt}\n\n"
+    
+    # Сегодня
     msg += f"📅 Сегодня ({DAY_NAMES[data['today_idx']]}):\n"
     for i, lesson in enumerate(data["today_lessons"], start=1):
         msg += f"{i}. {lesson}\n"
+    
+    # Завтра
     msg += f"\n📅 Завтра ({DAY_NAMES[data['tmr_idx']]}):\n"
     for i, lesson in enumerate(data["tmr_lessons"], start=1):
         msg += f"{i}. {lesson}\n"
-    msg += "\n📤 Вынуть: " + (", ".join(data["to_remove"]) or "Ничего")
-    msg += "\n📥 Положить: " + (", ".join(data["to_add"]) or "Ничего")
+    
+    # Вынуть
+    msg += "\n📤 Вынуть:\n"
+    if data["to_remove"]:
+        for i, item in enumerate(data["to_remove"], start=1):
+            msg += f"{i}. {item}\n"
+    else:
+        msg += "Ничего\n"
+    
+    # Положить
+    msg += "\n📥 Положить:\n"
+    if data["to_add"]:
+        for i, item in enumerate(data["to_add"], start=1):
+            msg += f"{i}. {item}\n"
+    else:
+        msg += "Ничего\n"
+    
     await update.message.reply_text(msg)
+
 
 # ---------- Основная функция ----------
 def main():
@@ -100,3 +121,4 @@ def main():
 
 if __name__ == "__main__":
     main()
+
