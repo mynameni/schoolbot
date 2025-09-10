@@ -1,9 +1,14 @@
+import os
+from flask import Flask, request
 from telegram import Update
 from telegram.ext import ApplicationBuilder, CommandHandler, ContextTypes
+
 from datetime import datetime, time
 
 # ---------- Настройки ----------
-TOKEN = "8366890929:AAHbEqoLqyQr1U8BEua7MPf6j1IquvvpGBg"  # вставь сюда токен своего бота
+TOKEN = os.environ.get("BOT_TOKEN")  # токен берём из переменных окружения Render
+APP_URL = os.environ.get("APP_URL")  # сюда вставится адрес Render: https://твой-сервис.onrender.com
+
 END_OF_DAY = time(12, 0)
 
 schedule_raw = {
@@ -18,9 +23,12 @@ schedule_raw = {
     4: ["иностранный язык", "литература", "биология/геом/право",
         "алгебра", "физкультура", "информатика", "физика"]
 }
+
 DAY_NAMES = ["Понедельник", "Вторник", "Среда", "Четверг", "Пятница",
              "Суббота", "Воскресенье"]
+
 PROFILE = {"алгебра", "геометрия", "информатика"}
+
 
 # ---------- Логика подсчета ----------
 def normalize_token(token: str) -> str:
@@ -77,50 +85,54 @@ def compute_lists():
         "to_add": add
     }
 
-# ---------- Функции бота ----------
+
+# ---------- Команды ----------
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     data = compute_lists()
     now_txt = data["now"].strftime("%d.%m.%Y %H:%M")
-    
+
     msg = f"хаю хай. сейчас: {now_txt}\n свага на месте👉😎👈 \n"
-    
-    # Сегодня
+
     msg += f"📅 Сегодня ({DAY_NAMES[data['today_idx']]}):\n"
     for i, lesson in enumerate(data["today_lessons"], start=1):
         msg += f"{i}. {lesson}\n"
-    
-    # Завтра
+
     msg += f"\n📅 Завтра ({DAY_NAMES[data['tmr_idx']]}):\n"
     for i, lesson in enumerate(data["tmr_lessons"], start=1):
         msg += f"{i}. {lesson}\n"
-    
-    # Вынуть
+
     msg += "\n📤 Вынуть:\n"
     if data["to_remove"]:
         for i, item in enumerate(data["to_remove"], start=1):
             msg += f"{i}. {item}\n"
     else:
         msg += "Ничего\n"
-    
-    # Положить
+
     msg += "\n📥 Положить:\n"
     if data["to_add"]:
         for i, item in enumerate(data["to_add"], start=1):
             msg += f"{i}. {item}\n"
     else:
         msg += "Ничего\n"
-    
+
     await update.message.reply_text(msg)
 
 
-# ---------- Основная функция ----------
-def main():
-    app = ApplicationBuilder().token(TOKEN).build()
-    app.add_handler(CommandHandler("start", start))
-    app.run_polling()
+# ---------- Flask + webhook ----------
+app_flask = Flask(__name__)
+telegram_app = ApplicationBuilder().token(TOKEN).build()
+telegram_app.add_handler(CommandHandler("start", start))
+
+@app_flask.route("/webhook", methods=["POST"])
+def webhook():
+    update = Update.de_json(request.get_json(force=True), telegram_app.bot)
+    telegram_app.update_queue.put_nowait(update)
+    return "ok"
+
+@app_flask.route("/")
+def index():
+    return "Бот работает!"
 
 if __name__ == "__main__":
-    main()
-
-
-
+    # Запускаем Flask
+    app_flask.run(host="0.0.0.0", port=10000)
