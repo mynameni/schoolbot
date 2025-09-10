@@ -1,15 +1,11 @@
-import os
-import requests
-from flask import Flask, request
 from telegram import Update
 from telegram.ext import ApplicationBuilder, CommandHandler, ContextTypes
-
+from flask import Flask, request
 from datetime import datetime, time
 
 # ---------- Настройки ----------
-TOKEN = os.environ.get("8366890929:AAHbEqoLqyQr1U8BEua7MPf6j1IquvvpGBg")  # токен из Render → Environment
-APP_URL = os.environ.get("https://schoolbot-3sra.onrender.com")  # https://твой-сервис.onrender.com
-
+TOKEN = "7518272620:AAGFiGGY7aifcVsqywl5Jktj8JDjsjcOGe0"
+APP_URL = "https://schoolbot-3sra.onrender.com"  # URL приложения на Render
 END_OF_DAY = time(12, 0)
 
 schedule_raw = {
@@ -24,12 +20,9 @@ schedule_raw = {
     4: ["иностранный язык", "литература", "биология/геом/право",
         "алгебра", "физкультура", "информатика", "физика"]
 }
-
 DAY_NAMES = ["Понедельник", "Вторник", "Среда", "Четверг", "Пятница",
              "Суббота", "Воскресенье"]
-
 PROFILE = {"алгебра", "геометрия", "информатика"}
-
 
 # ---------- Логика подсчета ----------
 def normalize_token(token: str) -> str:
@@ -66,13 +59,10 @@ def tomorrow_idx(idx: int):
 def compute_lists():
     now = datetime.now()
     today_idx = now.weekday()
-
     base_idx = today_idx
     tmr_idx = tomorrow_idx(today_idx)
-
     today_lessons = filtered_day(base_idx)
     tmr_lessons = filtered_day(tmr_idx)
-
     remove = [x for x in today_lessons if x not in tmr_lessons]
     add = [x for x in tmr_lessons if x not in today_lessons]
 
@@ -86,13 +76,11 @@ def compute_lists():
         "to_add": add
     }
 
-
-# ---------- Команды ----------
+# ---------- Функции бота ----------
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     data = compute_lists()
     now_txt = data["now"].strftime("%d.%m.%Y %H:%M")
-
-    msg = f"хаю хай. сейчас: {now_txt}\n свага на месте👉😎👈 \n"
+    msg = f"Привет! Сейчас: {now_txt}\n\n"
 
     msg += f"📅 Сегодня ({DAY_NAMES[data['today_idx']]}):\n"
     for i, lesson in enumerate(data["today_lessons"], start=1):
@@ -118,30 +106,25 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     await update.message.reply_text(msg)
 
+# ---------- Flask + Webhook ----------
+flask_app = Flask(__name__)
 
-# ---------- Flask + webhook ----------
-app_flask = Flask(__name__)
-telegram_app = ApplicationBuilder().token(TOKEN).build()
-telegram_app.add_handler(CommandHandler("start", start))
+app = ApplicationBuilder().token(TOKEN).build()
+app.add_handler(CommandHandler("start", start))
 
-@app_flask.route("/webhook", methods=["POST"])
+@flask_app.route(f"/{TOKEN}", methods=["POST"])
 def webhook():
-    update = Update.de_json(request.get_json(force=True), telegram_app.bot)
-    telegram_app.update_queue.put_nowait(update)
+    from telegram import Update
+    data = request.get_json(force=True)
+    update = Update.de_json(data, app.bot)
+    app.update_queue.put_nowait(update)
     return "ok"
 
-@app_flask.route("/")
-def index():
-    return "Бот работает!"
-
-
-# ---------- Автоустановка webhook ----------
-def set_webhook():
-    url = f"{APP_URL}/webhook"
-    r = requests.get(f"https://api.telegram.org/bot{TOKEN}/setWebhook?url={url}")
-    print("Webhook setup:", r.json())
-
-
+# ---------- Точка входа ----------
 if __name__ == "__main__":
-    set_webhook()  # один раз при старте установит webhook
-    app_flask.run(host="0.0.0.0", port=10000)
+    app.run_webhook(
+        listen="0.0.0.0",
+        port=5000,
+        webhook_url=f"{APP_URL}/{TOKEN}",
+        webhook_path=f"/{TOKEN}"
+    )
