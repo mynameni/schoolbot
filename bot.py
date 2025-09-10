@@ -6,8 +6,8 @@ from telegram.ext import ApplicationBuilder, CommandHandler, ContextTypes
 from datetime import datetime, time
 
 # ---------- Настройки ----------
-TOKEN = os.environ.get("BOT_TOKEN")  # токен берём из переменных окружения Render
-APP_URL = os.environ.get("APP_URL")  # сюда вставится адрес Render: https://твой-сервис.onrender.com
+TOKEN = os.environ.get("8366890929:AAHbEqoLqyQr1U8BEua7MPf6j1IquvvpGBg")  # токен берём из переменных окружения Render
+APP_URL = os.environ.get("https://schoolbot-3sra.onrender.com")  # сюда вставится адрес Render: https://твой-сервис.onrender.com
 
 END_OF_DAY = time(12, 0)
 
@@ -136,3 +136,4 @@ def index():
 if __name__ == "__main__":
     # Запускаем Flask
     app_flask.run(host="0.0.0.0", port=10000)
+
